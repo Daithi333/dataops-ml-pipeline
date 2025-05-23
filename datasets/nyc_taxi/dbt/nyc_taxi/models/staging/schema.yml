@@ -1,0 +1,44 @@
+version: 2
+
+models:
+  - name: stg_yellow_taxi
+    description: "Staging model for raw yellow taxi trip data"
+    columns:
+      - name: vendorid
+        description: "Code indicating the provider"
+        tests:
+          - not_null
+          - accepted_values:
+              values: [1, 2]
+
+      - name: tpep_pickup_datetime
+        description: "Timestamp when the trip started"
+        tests:
+          - not_null
+
+      - name: tpep_dropoff_datetime
+        description: "Timestamp when the trip ended"
+
+      - name: passenger_count
+        description: "Number of passengers"
+        tests:
+          - not_null
+          - dbt_utils.accepted_range:
+              min_value: 1
+              max_value: 6
+
+      - name: trip_distance
+        description: "Distance of the trip in miles"
+        tests:
+          - not_null
+          - dbt_utils.expression_is_true:
+              expression: "trip_distance > 0"
+
+# Optional: sources (if you're using dbt's source freshness features)
+sources:
+  - name: nyc_taxi_raw
+    schema: public
+    description: "Raw NYC taxi data loaded into Postgres"
+    tables:
+      - name: yellow_taxi_data
+        description: "Yellow taxi trips table"

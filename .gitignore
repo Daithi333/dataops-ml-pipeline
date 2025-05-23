@@ -1,0 +1,9 @@
+# IDE
+.idea/
+__pycache__/
+
+# dbt
+datasets/*/dbt/**/target/
+datasets/*/dbt/**/logs/
+datasets/*/dbt/**/dbt_packages/
+datasets/*/dbt/raw/

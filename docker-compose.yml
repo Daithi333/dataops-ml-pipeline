@@ -1,0 +1,37 @@
+version: '3.9'
+
+services:
+  data_postgres:
+    image: postgres:15
+    container_name: data_postgres
+    environment:
+      POSTGRES_USER: data_user
+      POSTGRES_PASSWORD: data_pass
+      POSTGRES_DB: analytics_db
+    ports:
+      - "5432:5432"
+    volumes:
+      - dataops_pgdata:/var/lib/postgresql/data
+
+  dbt_nyc_taxi:
+    image: ghcr.io/dbt-labs/dbt-postgres:1.6.0
+    container_name: dbt_nyc_taxi
+    working_dir: /usr/app/dbt
+    environment:
+      DBT_PROFILES_DIR: /usr/app/dbt
+      POSTGRES_HOST: data_postgres
+      POSTGRES_USER: data_user
+      POSTGRES_PASSWORD: data_pass
+      POSTGRES_DB: analytics_db
+      DBT_TARGET_SCHEMA: nyc_taxi
+    depends_on:
+      - data_postgres
+    ports:
+      - "8080:8080"
+    volumes:
+      - ./datasets/nyc_taxi/dbt/nyc_taxi:/usr/app/dbt
+      - ./datasets/nyc_taxi/dbt/profiles.yml:/usr/app/dbt/profiles.yml:ro
+    command: docs serve
+
+volumes:
+  dataops_pgdata:
