@@ -1,12 +1,12 @@
 ## DataOps Pipeline for Public Datasets
 
-**Description:**
+#### Description
 
 DataOps pipeline designed to ingest, transform, and prepare public datasets (starting with NYC Taxi data) for 
 downstream analytics and machine learning. It emphasizes cost-efficient, portable development using Docker, 
 dbt for SQL-based transformations, and Python-based ETL for flexible data loading.
 
-**Key Features:**
+#### Key Features
 
 🔁 ETL Engine for loading Parquet datasets into a local Postgres database
 
@@ -18,7 +18,7 @@ dbt for SQL-based transformations, and Python-based ETL for flexible data loadin
 
 🗃️ Generic, reusable structure for plugging in other public datasets with minimal changes
 
-**Use Cases:**
+#### Use Cases
 
 Rapid experimentation with data pipelines
 
@@ -26,14 +26,15 @@ Reproducible data preparation for ML/AI projects
 
 Local data engineering practice without cloud costs
 
-**Links:**
+#### Links
 - [NY taxi data](https://www.nyc.gov/site/tlc/about/tlc-trip-record-data.page)
 
-Commands:
+#### Commands
 
-Verify DB initialised - `docker exec -it data_postgres psql -U data_user -d analytics_db`
+**Verify DB initialised:** 
+`docker exec -it data_postgres psql -U data_user -d analytics_db`
 
-Explore table:
+**Explore table:**
 ```
 \dn                                              -- List schemas
 \dt nyc_taxi.*                                   -- List tables in the 'nyc_taxi' schema
