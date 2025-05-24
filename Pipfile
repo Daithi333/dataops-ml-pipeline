@@ -9,6 +9,7 @@ pandas = "*"
 sqlalchemy = "*"
 loguru = "*"
 pyarrow = "*"
+apache-airflow = {version = "==2.9.0", extras = ["postgres"]}
 
 [dev-packages]
 black = "*"
@@ -16,4 +17,4 @@ flake8 = "*"
 pre-commit = "*"
 
 [requires]
-python_version = "3.13"
+python_version = "3.10"

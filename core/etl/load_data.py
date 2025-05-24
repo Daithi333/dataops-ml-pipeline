@@ -4,10 +4,10 @@ from typing import Literal
 import pandas as pd
 from loguru import logger
 from sqlalchemy import text
-from core.database import db
+from core.database import analytics_db
 
 
-def load_csv_files_to_postgres(
+def load_files_to_postgres(
     directory_path: str,
     file_type: Literal["csv", "parquet"],
     table_name: str,
@@ -26,7 +26,7 @@ def load_csv_files_to_postgres(
     - if_exists (str): One of 'fail', 'replace', 'append'.
     """
 
-    with db.engine.connect() as conn:
+    with analytics_db.engine.connect() as conn:
         conn.execute(text(f"CREATE SCHEMA IF NOT EXISTS {schema}"))
         if truncate_table:
             conn.execute(text(f"TRUNCATE TABLE {schema}.{table_name};"))
@@ -37,10 +37,10 @@ def load_csv_files_to_postgres(
         logger.info(f"Loading '{file}' ...")
         if file_type == 'csv':
             df = pd.read_csv(file)
-            df.to_sql(table_name, db.engine, schema=schema, if_exists=if_exists, index=False)
+            df.to_sql(table_name, analytics_db.engine, schema=schema, if_exists=if_exists, index=False)
         elif file_type == 'parquet':
             df = pd.read_parquet(file)
-            df.to_sql(table_name, db.engine, schema=schema, if_exists=if_exists, index=False)
+            df.to_sql(table_name, analytics_db.engine, schema=schema, if_exists=if_exists, index=False)
         else:
             raise ValueError(f"File type '{file_type}' unsupported")
 

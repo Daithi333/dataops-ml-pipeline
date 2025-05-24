@@ -26,15 +26,16 @@ Reproducible data preparation for ML/AI projects
 
 Local data engineering practice without cloud costs
 
-#### Links
+#### Data
 - [NY taxi data](https://www.nyc.gov/site/tlc/about/tlc-trip-record-data.page)
 
 #### Commands
 
-**Verify DB initialised:** 
-`docker exec -it data_postgres psql -U data_user -d analytics_db`
+**Verify DB initialised:**
+- `docker exec -it dataops_postgres psql -U postgres -d analytics`
+- `docker exec -it dataops_postgres psql -U postgres -d airflow`
 
-**Explore table:**
+**Explore analytics table after data insertion:**
 ```
 \dn                                              -- List schemas
 \dt nyc_taxi.*                                   -- List tables in the 'nyc_taxi' schema
@@ -45,7 +46,7 @@ SELECT COUNT(*) FROM nyc_taxi.yellow_taxi_data;  -- Confirm data is loaded
 As dbt typically gets run ephemerally, start the db container on its own with `docker compose up -d data_postgres`
 
 **Load raw data into Postgres:**
-From the project root, run `PYTHONPATH=. python datasets/nyc_taxi/pipelines/load_data.py`
+From the project root, run `PYTHONPATH=. python datasets/nyc_taxi/etl/load_data.py`
 
 **Run dbt:**
 `docker compose run --rm dbt_nyc_taxi run`

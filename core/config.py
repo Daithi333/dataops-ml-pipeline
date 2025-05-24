@@ -5,11 +5,13 @@ class Config:
 
     DB_HOST = os.getenv("DB_HOST", "localhost")
     DB_PORT = os.getenv("DB_PORT", "5432")
-    DB_USER = os.getenv("DB_USER", "data_user")
-    DB_PW = os.getenv("DB_PW", "data_pass")
-    DB_NAME = os.getenv("DB_NAME", "analytics_db")
+    DB_USER = os.getenv("DB_USER", "postgres")
+    DB_PW = os.getenv("DB_PW", "postgres")
+    ANALYTICS_DB_NAME = os.getenv("DB_NAME", "analytics")
+    AIRFLOW_DB_NAME = os.getenv("DB_NAME", "orchestration")
 
-    DB_URL = f"postgresql://{DB_USER}:{DB_PW}@{DB_HOST}:{DB_PORT}/{DB_NAME}"
+    ANALYTICS_DB_URL = f"postgresql://{DB_USER}:{DB_PW}@{DB_HOST}:{DB_PORT}/{ANALYTICS_DB_NAME}"
+    AIRFLOW_DB_URL = f"postgresql://{DB_USER}:{DB_PW}@{DB_HOST}:{DB_PORT}/{AIRFLOW_DB_NAME}"
 
     DB_POOL_SIZE = int(os.environ.get("DB_POOL_SIZE", 20))
     DB_MAX_OVERFLOW = int(os.environ.get("DB_MAX_OVERFLOW", 20))
