@@ -1,11 +1,19 @@
 #!/bin/bash
 set -e
 
-# Initialize Airflow DB if not already initialized
+echo "Upgrading Airflow DB..."
 airflow db migrate
 
-# Create default connections
-airflow connections create-default-connections
+if ! airflow users list | grep -q admin; then
+  echo "Creating admin user..."
+  export FLASK_APP=airflow.www.app
+  flask fab create-admin \
+    --username admin \
+    --password admin \
+    --firstname Admin \
+    --lastname User \
+    --email admin@example.com
+fi
 
-# Start the appropriate Airflow component
+echo "Starting Airflow component..."
 exec airflow "$@"

@@ -5,9 +5,9 @@ services:
     image: postgres:15
     container_name: dataops_postgres
     environment:
-      POSTGRES_USER: postgres
-      POSTGRES_PASSWORD: postgres
-      POSTGRES_DB: postgres
+      POSTGRES_USER: ${POSTGRES_USER}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD}
+      POSTGRES_DB: ${POSTGRES_DB}
     volumes:
       - dataops_data:/var/lib/postgresql/data
       - ./scripts/init-postgres.sql:/docker-entrypoint-initdb.d/init-postgres.sql
@@ -31,11 +31,11 @@ services:
       - ./datasets/nyc_taxi/dbt/profiles.yml:/usr/app/dbt/profiles.yml:ro
     working_dir: /usr/app/dbt
 
-  dataops_airflow:
+  dataops_airflow_webserver:
     build:
       context: .
-      dockerfile: orchestration/Dockerfile
-    container_name: dataops_airflow
+      dockerfile: ./airflow/Dockerfile
+    container_name: dataops_airflow_webserver
     depends_on:
       dataops_postgres:
         condition: service_healthy
@@ -44,14 +44,38 @@ services:
     environment:
       AIRFLOW__CORE__EXECUTOR: "SequentialExecutor"
       AIRFLOW__CORE__LOAD_EXAMPLES: "False"
-      AIRFLOW__DATABASE__SQL_ALCHEMY_CONN: postgresql+psycopg2://postgres:postgres@dataops_postgres:5432/airflow
-      AIRFLOW__CORE__DAGS_FOLDER: /opt/airflow/orchestration/dags
+      AIRFLOW__DATABASE__SQL_ALCHEMY_CONN: ${DB_URL}
+      AIRFLOW__CORE__DAGS_FOLDER: /opt/airflow/src/pipeline/dags
+      PYTHONPATH: /opt/airflow/src
+      DB_HOST: ${DB_HOST}
     volumes:
-      - ../:/opt/airflow  # Mount entire repo for import resolution inside DAGs
+      - ./src:/opt/airflow/src
+      - ./datasets:/opt/airflow/datasets
+      - ./scripts/airflow-entrypoint.sh:/scripts/airflow-entrypoint.sh:ro
     ports:
       - "8080:8080"
-    entrypoint: ["bash", "/scripts/airflow-entrypoint.sh"]
+    entrypoint: ["/bin/bash", "/scripts/airflow-entrypoint.sh"]
     command: webserver
+
+  dataops_airflow_scheduler:
+    build:
+      context: .
+      dockerfile: ./airflow/Dockerfile
+    container_name: dataops_airflow_scheduler
+    depends_on:
+      dataops_postgres:
+        condition: service_healthy
+    environment:
+      AIRFLOW__CORE__EXECUTOR: "SequentialExecutor"
+      AIRFLOW__CORE__LOAD_EXAMPLES: "False"
+      AIRFLOW__DATABASE__SQL_ALCHEMY_CONN: ${DB_URL}
+      AIRFLOW__CORE__DAGS_FOLDER: /opt/airflow/src/pipeline/dags
+      PYTHONPATH: /opt/airflow/src
+      DB_HOST: ${DB_HOST}
+    volumes:
+      - ./src:/opt/airflow/src
+      - ./datasets:/opt/airflow/datasets
+    command: scheduler
 
 volumes:
   dataops_data:

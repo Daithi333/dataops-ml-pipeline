@@ -42,13 +42,13 @@ Local data engineering practice without cloud costs
 SELECT COUNT(*) FROM nyc_taxi.yellow_taxi_data;  -- Confirm data is loaded
 ```
 
-**Start the db:**
-As dbt typically gets run ephemerally, start the db container on its own with `docker compose up -d data_postgres`
+**Start db (independently):**
+`docker compose up -d dataops_postgres`
 
-**Load raw data into Postgres:**
-From the project root, run `PYTHONPATH=. python datasets/nyc_taxi/etl/load_data.py`
+**Load raw data via CLI:**
+From the project root and with db container running, run `PYTHONPATH=./src python src/dbt/etl.py --dataset nyc_taxi`
 
-**Run dbt:**
+**Run dbt (independently):**
 `docker compose run --rm dbt_nyc_taxi run`
 
 **(Optional) Run dbt tests:**

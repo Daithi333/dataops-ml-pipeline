@@ -1,0 +1,21 @@
+[project]
+name = "dataops-ml-pipeline"
+version = "0.1.0"
+description = ""
+authors = [
+    {name = "David McElhill",email = "daithi@hotmail.co.uk"}
+]
+readme = "README.md"
+requires-python = ">=3.10,<3.13"
+dependencies = [
+    "dbt-postgres (>=1.9.0,<2.0.0)",
+    "loguru (>=0.7.3,<0.8.0)",
+    "pyarrow (>=20.0.0,<21.0.0)",
+    "pandas (<2.2)",
+    "apache-airflow[postgres] (==2.9.0)"
+]
+
+
+[build-system]
+requires = ["poetry-core>=2.0.0,<3.0.0"]
+build-backend = "poetry.core.masonry.api"

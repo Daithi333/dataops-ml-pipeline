@@ -2,7 +2,8 @@ from airflow import DAG
 from airflow.operators.python import PythonOperator
 from airflow.operators.bash import BashOperator
 from datetime import datetime, timedelta
-from datasets.nyc_taxi.etl.load_data import load_nyc_taxi_data
+
+from dbt.etl import load_dataset
 
 default_args = {
     "owner": "dataops",
@@ -22,7 +23,8 @@ with DAG(
 
     load_task = PythonOperator(
         task_id="load_nyc_taxi_data",
-        python_callable=load_nyc_taxi_data,
+        python_callable=load_dataset,
+        op_kwargs={"dataset": "nyc_taxi"},
     )
 
     dbt_task = BashOperator(

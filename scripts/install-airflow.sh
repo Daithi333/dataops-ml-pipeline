@@ -8,11 +8,11 @@ set -e
 
 EXTRAS="postgres"
 
-echo "Installing Apache Airflow ${AIRFLOW_VERSION} with Python ${PYTHON_VERSION}..."
-
 export AIRFLOW_VERSION=2.9.0
 export PYTHON_VERSION=3.10
 export CONSTRAINT_URL="https://raw.githubusercontent.com/apache/airflow/constraints-${AIRFLOW_VERSION}/constraints-${PYTHON_VERSION}.txt"
+
+echo "Installing Apache Airflow ${AIRFLOW_VERSION} with Python ${PYTHON_VERSION}..."
 
 # Ensure pipenv shell is activated and working
 if ! pipenv --venv &>/dev/null; then
