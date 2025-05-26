@@ -51,7 +51,6 @@ services:
     volumes:
       - ./src:/opt/airflow/src
       - ./datasets:/opt/airflow/datasets
-      - ./scripts/airflow-entrypoint.sh:/scripts/airflow-entrypoint.sh:ro
     ports:
       - "8080:8080"
     entrypoint: ["/bin/bash", "/scripts/airflow-entrypoint.sh"]

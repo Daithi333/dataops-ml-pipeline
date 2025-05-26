@@ -25,6 +25,7 @@ with DAG(
         task_id="load_nyc_taxi_data",
         python_callable=load_dataset,
         op_kwargs={"dataset": "nyc_taxi"},
+        execution_timeout=timedelta(minutes=60)
     )
 
     dbt_task = BashOperator(

@@ -7,8 +7,8 @@ class Config:
     DB_PORT = os.getenv("DB_PORT", "5432")
     DB_USER = os.getenv("DB_USER", "postgres")
     DB_PW = os.getenv("DB_PW", "postgres")
-    ANALYTICS_DB_NAME = os.getenv("DB_NAME", "analytics")
-    AIRFLOW_DB_NAME = os.getenv("DB_NAME", "airflow")
+    ANALYTICS_DB_NAME = os.getenv("ANALYTICS_DB_NAME", "analytics")
+    AIRFLOW_DB_NAME = os.getenv("AIRFLOW_DB_NAME", "airflow")
 
     ANALYTICS_DB_URL = f"postgresql://{DB_USER}:{DB_PW}@{DB_HOST}:{DB_PORT}/{ANALYTICS_DB_NAME}"
     AIRFLOW_DB_URL = f"postgresql://{DB_USER}:{DB_PW}@{DB_HOST}:{DB_PORT}/{AIRFLOW_DB_NAME}"
@@ -17,5 +17,5 @@ class Config:
     DB_MAX_OVERFLOW = int(os.environ.get("DB_MAX_OVERFLOW", 20))
 
     DATASETS = {
-        "nyc_taxi": ("datasets/nyc_taxi/raw/", "parquet", "yellow_taxi_data"),
+        "nyc_taxi": ("datasets/nyc_taxi/raw", "parquet", "yellow_taxi_data"),
     }
