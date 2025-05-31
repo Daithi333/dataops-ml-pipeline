@@ -5,7 +5,7 @@ from airflow.decorators import task
 from airflow.operators.bash import BashOperator
 from airflow.utils.dates import days_ago
 
-from dbt.etl import list_dataset_files, load_dataset_file
+from etl import list_dataset_files, load_dataset_file
 
 default_args = {
     "owner": "airflow",
@@ -24,17 +24,16 @@ with DAG(
     def list_files():
         return list_dataset_files(dataset="nyc_taxi")
 
-    @task(execution_timeout=timedelta(minutes=15))
+    @task(execution_timeout=timedelta(minutes=15), max_active_tis_per_dag=2)
     def load_file(file_path: str):
         load_dataset_file(dataset="nyc_taxi", file_path=file_path)
 
     file_paths = list_files()
     load_tasks = load_file.expand(file_path=file_paths)
 
-    dbt_task = BashOperator(
+    dbt_run_task = BashOperator(
         task_id="run_dbt",
-        bash_command="docker exec dataops_dbt dbt run",
+        bash_command="docker exec dataops_dbt run --verbose",
     )
 
-    # Chain: all file loads must finish before dbt runs
-    load_tasks >> dbt_task
+    load_tasks >> dbt_run_task

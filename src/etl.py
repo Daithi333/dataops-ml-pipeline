@@ -2,7 +2,11 @@ import sys
 from argparse import ArgumentParser
 
 from core.config import Config
-from core.etl.load_data import list_eligible_files, load_files_to_postgres, load_file_to_postgres
+from core.etl.load_data import (
+    list_eligible_files,
+    load_files_to_postgres,
+    load_file_to_postgres,
+)
 
 
 def list_dataset_files(dataset: str) -> list[str]:
@@ -34,16 +38,20 @@ def main():
         "--dataset",
         type=str,
         required=True,
-        help=f"Dataset to process. Options: {', '.join(Config.DATASETS.keys())}"
+        help=f"Dataset to process. Options: {', '.join(Config.DATASETS.keys())}",
     )
 
     args = parser.parse_args()
 
     if args.dataset not in Config.DATASETS:
-        print(f"❌ Invalid dataset '{args.dataset}'. Must be one of: {', '.join(Config.DATASETS.keys())}")
+        print(
+            f"❌ Invalid dataset '{args.dataset}'. Must be one of: {', '.join(Config.DATASETS.keys())}"
+        )
         sys.exit(1)
 
-    print(f"✅ Running pipeline for dataset: {args.dataset} ({Config.DATASETS[args.dataset]})")
+    print(
+        f"✅ Running pipeline for dataset: {args.dataset} ({Config.DATASETS[args.dataset]})"
+    )
 
     load_dataset(dataset=args.dataset)
 

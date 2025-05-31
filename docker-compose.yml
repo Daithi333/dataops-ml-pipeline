@@ -19,17 +19,45 @@ services:
       timeout: 5s
       retries: 10
 
+  dataops_volume_init:
+    image: alpine:3.18
+    container_name: dataops_volume_init
+    entrypoint: ["/bin/sh", "-c"]
+    command: >
+      "mkdir -p /dbt/nyc_taxi &&
+       cp -r /source/dbt/nyc_taxi/* /dbt/nyc_taxi/ &&
+       cp /source/dbt/profiles.yml /dbt/profiles.yml &&
+       mkdir -p /datasets/nyc_taxi/raw &&
+       cp -r /source/raw/* /datasets/nyc_taxi/raw/"
+    volumes:
+      - ./datasets/nyc_taxi/dbt:/source/dbt:ro
+      - ./datasets/nyc_taxi/raw:/source/raw:ro
+      - dbt_project:/dbt
+      - datasets:/datasets
+
   dataops_dbt:
     image: ghcr.io/dbt-labs/dbt-postgres:1.7.4
     container_name: dataops_dbt
     depends_on:
-      - dataops_postgres
+      dataops_postgres:
+        condition: service_healthy
+      dataops_volume_init:
+        condition: service_completed_successfully
     environment:
       DBT_PROFILES_DIR: /usr/app/dbt
+      DB_HOST: ${DB_HOST}
+      DB_PORT: ${DB_PORT}
+      DB_USER: ${DB_USER}
+      DB_PW: ${DB_PW}
+      DB_NAME: ${DB_NAME}
+      SCHEMA: ${SCHEMA}
     volumes:
-      - ./datasets/nyc_taxi/dbt/nyc_taxi:/usr/app/dbt
-      - ./datasets/nyc_taxi/dbt/profiles.yml:/usr/app/dbt/profiles.yml:ro
-    working_dir: /usr/app/dbt
+      - dbt_project:/dbt
+      - datasets:/datasets
+    working_dir: /dbt/nyc_taxi
+    command: docs serve
+    ports:
+      - "8081:8080"
 
   dataops_airflow_webserver:
     build:
@@ -41,16 +69,19 @@ services:
         condition: service_healthy
       dataops_dbt:
         condition: service_started
+      dataops_volume_init:
+        condition: service_completed_successfully
     environment:
       AIRFLOW__CORE__EXECUTOR: "SequentialExecutor"
       AIRFLOW__CORE__LOAD_EXAMPLES: "False"
       AIRFLOW__DATABASE__SQL_ALCHEMY_CONN: ${DB_URL}
       AIRFLOW__CORE__DAGS_FOLDER: /opt/airflow/src/pipeline/dags
+      AIRFLOW__WEBSERVER__SECRET_KEY: ${WEBSERVER_SECRET_KEY}
       PYTHONPATH: /opt/airflow/src
-      DB_HOST: ${DB_HOST}
     volumes:
       - ./src:/opt/airflow/src
-      - ./datasets:/opt/airflow/datasets
+      - dbt_project:dbt
+      - datasets:/datasets
     ports:
       - "8080:8080"
     entrypoint: ["/bin/bash", "/scripts/airflow-entrypoint.sh"]
@@ -64,17 +95,28 @@ services:
     depends_on:
       dataops_postgres:
         condition: service_healthy
+      dataops_volume_init:
+        condition: service_completed_successfully
     environment:
       AIRFLOW__CORE__EXECUTOR: "SequentialExecutor"
       AIRFLOW__CORE__LOAD_EXAMPLES: "False"
       AIRFLOW__DATABASE__SQL_ALCHEMY_CONN: ${DB_URL}
       AIRFLOW__CORE__DAGS_FOLDER: /opt/airflow/src/pipeline/dags
+      AIRFLOW__WEBSERVER__SECRET_KEY: ${WEBSERVER_SECRET_KEY}
       PYTHONPATH: /opt/airflow/src
       DB_HOST: ${DB_HOST}
+      DB_PORT: ${DB_PORT}
+      DB_USER: ${DB_USER}
+      DB_PW: ${DB_PW}
+      DB_NAME: ${DB_NAME}
     volumes:
       - ./src:/opt/airflow/src
-      - ./datasets:/opt/airflow/datasets
+      - dbt_project:/dbt
+      - datasets:/datasets
+      - /var/run/docker.sock:/var/run/docker.sock
     command: scheduler
 
 volumes:
   dataops_data:
+  dbt_project:
+  datasets:

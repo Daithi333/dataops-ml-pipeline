@@ -3,7 +3,7 @@ from airflow.operators.python import PythonOperator
 from airflow.operators.bash import BashOperator
 from datetime import datetime, timedelta
 
-from dbt.etl import load_dataset
+from etl import load_dataset
 
 default_args = {
     "owner": "dataops",
@@ -28,9 +28,9 @@ with DAG(
         execution_timeout=timedelta(minutes=60)
     )
 
-    dbt_task = BashOperator(
-        task_id="run_dbt",
-        bash_command="docker exec dataops_dbt dbt run",
+    dbt_run_task = BashOperator(
+        task_id="dbt_run",
+        bash_command="docker exec dataops_dbt dbt run --verbose",
     )
 
-    load_task >> dbt_task
+    load_task >> dbt_run_task

@@ -46,14 +46,17 @@ SELECT COUNT(*) FROM nyc_taxi.yellow_taxi_data;  -- Confirm data is loaded
 `docker compose up -d dataops_postgres`
 
 **Load raw data via CLI:**
-From the project root and with db container running, run `PYTHONPATH=./src python src/dbt/etl.py --dataset nyc_taxi`
+From the project root and with db container running, run `PYTHONPATH=./src python src/etl.py --dataset nyc_taxi`
 
 **Run dbt (independently):**
-`docker compose run --rm dbt_nyc_taxi run`
+`docker compose run --rm dataops_dbt run`
 
 **(Optional) Run dbt tests:**
-`docker compose run --rm dbt_nyc_taxi test`
+`docker compose run --rm dataops_dbt test`
 
-**(Optional) Generate docs and serve:**
-`docker compose run --rm dbt_nyc_taxi docs generate`
-`docker compose run --rm dbt_nyc_taxi docs serve`
+**(Optional) Generate dbt docs and serve:**
+`docker compose run --rm dataops_dbt docs generate`
+`docker compose run --rm dataops_dbt docs serve`
+
+**Inspect dbt entrypoint:**
+`docker inspect dataops_dbt --format '{{.Config.Entrypoint}}'`

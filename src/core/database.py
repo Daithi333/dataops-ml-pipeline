@@ -24,16 +24,8 @@ class Database:
             session.close()
 
 
-analytics_db = Database(
-    Config.ANALYTICS_DB_URL,
-    connect_args={"options": "-c timezone=utc"},
-    pool_pre_ping=True,
-    pool_size=Config.DB_POOL_SIZE,
-    max_overflow=Config.DB_MAX_OVERFLOW,
-)
-
-airflow_db = Database(
-    Config.AIRFLOW_DB_URL,
+db = Database(
+    Config.DB_URL,
     connect_args={"options": "-c timezone=utc"},
     pool_pre_ping=True,
     pool_size=Config.DB_POOL_SIZE,

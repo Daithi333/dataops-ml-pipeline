@@ -12,3 +12,6 @@ datasets/*/dbt/**/logs/
 # environment
 .venv/
 .env
+
+# os
+.DS_Store
