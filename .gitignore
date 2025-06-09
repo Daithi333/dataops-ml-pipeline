@@ -15,3 +15,6 @@ datasets/*/dbt/**/logs/
 
 # os
 .DS_Store
+
+# airflow extras
+airflow/docker-compose.yaml

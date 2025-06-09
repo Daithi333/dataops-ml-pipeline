@@ -1,7 +1,7 @@
 import sys
 from argparse import ArgumentParser
 
-from core.config import Config
+from config import Config
 from core.etl.load_data import (
     list_eligible_files,
     load_files_to_postgres,

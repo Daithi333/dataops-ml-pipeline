@@ -6,8 +6,7 @@ airflow db migrate
 
 if ! airflow users list | grep -q admin; then
   echo "Creating admin user..."
-  export FLASK_APP=airflow.www.app
-  flask fab create-admin \
+  airflow users create \
     --username admin \
     --password admin \
     --firstname Admin \

@@ -1,24 +1,19 @@
-FROM apache/airflow:2.9.0-python3.12
+FROM apache/airflow:3.0.1-python3.10
 
 USER root
 
-RUN apt-get update && apt-get install -y docker.io
+RUN curl -sSL https://install.python-poetry.org | python3 && \
+    ln -s /root/.local/bin/poetry /usr/local/bin/poetry
 
-RUN curl -sSL https://install.python-poetry.org | python3 -
-ENV PATH="/root/.local/bin:$PATH"
+ENV POETRY_VIRTUALENVS_CREATE=false \
+    POETRY_NO_INTERACTION=1
 
-COPY ./scripts/airflow-entrypoint.sh /scripts/airflow-entrypoint.sh
-RUN chmod +x /scripts/airflow-entrypoint.sh
+COPY pyproject.toml poetry.lock ./
+RUN poetry install --no-root --without dev
 
-WORKDIR /opt/airflow
+COPY ./src /opt/airflow/src
 
-COPY pyproject.toml poetry.lock /opt/airflow/
+ENV PYTHONPATH="/opt/airflow:/opt/airflow/src"
+ENV AIRFLOW__CORE__DAGS_FOLDER=/opt/airflow/src/pipeline/dags
 
-RUN poetry config virtualenvs.create false \
- && poetry install --no-root --no-interaction --no-ansi
-
-# Switch back to airflow user for runtime
 USER airflow
-
-ENTRYPOINT ["/bin/bash", "/scripts/airflow-entrypoint.sh"]
-CMD ["webserver"]

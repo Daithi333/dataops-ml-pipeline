@@ -1,0 +1,6 @@
+# docker compose override for local dev
+version: "3.9"
+services:
+  dataops_airflow_scheduler:
+    volumes:
+      - ./src:/opt/airflow/src  # Override the baked-in source code

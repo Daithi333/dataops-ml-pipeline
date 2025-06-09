@@ -1,24 +1,30 @@
-from datetime import timedelta
+from datetime import timedelta, datetime
+
+from docker.types import Mount
 
 from airflow import DAG
 from airflow.decorators import task
-from airflow.operators.bash import BashOperator
-from airflow.utils.dates import days_ago
+from airflow.providers.docker.operators.docker import DockerOperator
 
+from config import Config
 from etl import list_dataset_files, load_dataset_file
 
 default_args = {
-    "owner": "airflow",
-    "start_date": days_ago(1),
+    "depends_on_past": False,
+    "retries": 1,
+    "retry_delay": timedelta(minutes=5),
 }
 
 with DAG(
     "load_and_transform_nyc_taxi_alt",
     default_args=default_args,
-    schedule_interval="@daily",
+    description="Load NYC taxi data into Postgres and run dbt on it",
+    schedule=timedelta(days=1),
+    start_date=datetime(2025, 6, 1),
     catchup=False,
+    tags={"nyc_taxi"},
 ) as dag:
-    """Alternative where each file gets it own task, due to DAG processing timeout (zombie job status)"""
+    """Alternative DAG where each file gets it own task, due to DAG processing timeout"""
 
     @task
     def list_files():
@@ -31,9 +37,18 @@ with DAG(
     file_paths = list_files()
     load_tasks = load_file.expand(file_path=file_paths)
 
-    dbt_run_task = BashOperator(
+    dbt_run_task = DockerOperator(
         task_id="run_dbt",
-        bash_command="docker exec dataops_dbt run --verbose",
+        image="ghcr.io/dbt-labs/dbt-postgres",
+        command="dbt run --project-dir /dbt/nyc_taxi --profiles-dir /dbt",
+        network_mode="bridge",
+        mounts=[
+            Mount(source='dbt_project', target='/dbt', type='volume'),
+            Mount(source='datasets', target='/datasets', type='volume'),
+        ],
+        auto_remove="success",
+        docker_url=Config.DOCKER_URL,
+        api_version="auto",
     )
 
     load_tasks >> dbt_run_task

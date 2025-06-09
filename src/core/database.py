@@ -2,9 +2,9 @@ from contextlib import contextmanager
 
 from sqlalchemy import create_engine
 from sqlalchemy.engine import Engine
-from sqlalchemy.orm import sessionmaker
+from sqlalchemy.orm.session import sessionmaker
 
-from core.config import Config
+from config import Config
 
 
 class Database:

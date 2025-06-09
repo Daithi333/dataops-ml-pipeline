@@ -8,13 +8,10 @@ authors = [
 readme = "README.md"
 requires-python = ">=3.10,<3.13"
 dependencies = [
-    "dbt-postgres (>=1.9.0,<2.0.0)",
-    "loguru (>=0.7.3,<0.8.0)",
-    "pyarrow (>=20.0.0,<21.0.0)",
-    "pandas (<2.2)",
-    "apache-airflow[postgres] (==2.9.0)"
+    "loguru>=0.7.3,<0.8.0",
+    "pyarrow>=20.0.0,<21.0.0",
+    "pandas<2.2",
 ]
-
 
 [build-system]
 requires = ["poetry-core>=2.0.0,<3.0.0"]
@@ -22,4 +19,7 @@ build-backend = "poetry.core.masonry.api"
 
 [tool.poetry.group.dev.dependencies]
 ruff = "^0.11.12"
-
+# airflow dependencies are for dev only, as they are already installed in the airflow python image
+apache-airflow="3.0.1"
+apache-airflow-providers-standard = "1.1.0"
+apache-airflow-providers-docker = "3.12.3"

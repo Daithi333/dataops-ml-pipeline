@@ -1,5 +1,32 @@
 version: "3.9"
 
+x-airflow-common:
+  &airflow-common
+#  image: ${AIRFLOW_IMAGE_NAME:-apache/airflow:3.0.1-python3.10}
+  build:
+    context: .
+    dockerfile: ./airflow/Dockerfile
+  environment:
+    &airflow-common-env
+    AIRFLOW__CORE__EXECUTOR: LocalExecutor
+    AIRFLOW__CORE__AUTH_MANAGER: airflow.providers.fab.auth_manager.fab_auth_manager.FabAuthManager
+    AIRFLOW__CORE__DAGS_FOLDER: /opt/airflow/src/pipeline/dags
+    AIRFLOW__CORE__FERNET_KEY: ''
+    AIRFLOW__CORE__DAGS_ARE_PAUSED_AT_CREATION: 'false'
+    AIRFLOW__CORE__LOAD_EXAMPLES: 'false'
+    AIRFLOW__CORE__EXECUTION_API_SERVER_URL: 'http://${DB_URL}:8080/execution/'
+    AIRFLOW__DATABASE__SQL_ALCHEMY_CONN: ${DB_URL}
+  volumes:
+    - dbt_project:/dbt
+    - datasets:/datasets
+  user: "${AIRFLOW_UID:-50000}:0"
+  depends_on:
+    &airflow-common-depends-on
+    dataops_postgres:
+      condition: service_healthy
+    dataops_volume_init:
+      condition: service_completed_successfully
+
 services:
   dataops_postgres:
     image: postgres:15
@@ -38,83 +65,58 @@ services:
   dataops_dbt:
     image: ghcr.io/dbt-labs/dbt-postgres:1.7.4
     container_name: dataops_dbt
+    ports:
+      - "8081:8080"
+    command: docs serve
+    # Container will only start by specifying its profile: 'docker-compose --profile optional up'
+    profiles:
+      - optional
     depends_on:
       dataops_postgres:
         condition: service_healthy
       dataops_volume_init:
         condition: service_completed_successfully
     environment:
-      DBT_PROFILES_DIR: /usr/app/dbt
+      DBT_PROFILES_DIR: /dbt
       DB_HOST: ${DB_HOST}
       DB_PORT: ${DB_PORT}
       DB_USER: ${DB_USER}
       DB_PW: ${DB_PW}
       DB_NAME: ${DB_NAME}
-      SCHEMA: ${SCHEMA}
     volumes:
       - dbt_project:/dbt
       - datasets:/datasets
     working_dir: /dbt/nyc_taxi
-    command: docs serve
-    ports:
-      - "8081:8080"
 
   dataops_airflow_webserver:
-    build:
-      context: .
-      dockerfile: ./airflow/Dockerfile
+    <<: *airflow-common
     container_name: dataops_airflow_webserver
-    depends_on:
-      dataops_postgres:
-        condition: service_healthy
-      dataops_dbt:
-        condition: service_started
-      dataops_volume_init:
-        condition: service_completed_successfully
-    environment:
-      AIRFLOW__CORE__EXECUTOR: "SequentialExecutor"
-      AIRFLOW__CORE__LOAD_EXAMPLES: "False"
-      AIRFLOW__DATABASE__SQL_ALCHEMY_CONN: ${DB_URL}
-      AIRFLOW__CORE__DAGS_FOLDER: /opt/airflow/src/pipeline/dags
-      AIRFLOW__WEBSERVER__SECRET_KEY: ${WEBSERVER_SECRET_KEY}
-      PYTHONPATH: /opt/airflow/src
-    volumes:
-      - ./src:/opt/airflow/src
-      - dbt_project:dbt
-      - datasets:/datasets
     ports:
       - "8080:8080"
-    entrypoint: ["/bin/bash", "/scripts/airflow-entrypoint.sh"]
-    command: webserver
+    command: ["airflow", "api-server"]
+    depends_on:
+      <<: *airflow-common-depends-on
+    environment:
+      <<: *airflow-common-env
+      _AIRFLOW_DB_MIGRATE: true
+      _AIRFLOW_WWW_USER_CREATE: true
+      _AIRFLOW_WWW_USER_USERNAME: ${AIRFLOW_USERNAME}
+      _AIRFLOW_WWW_USER_PASSWORD: ${AIRFLOW_PASSWORD}
 
   dataops_airflow_scheduler:
-    build:
-      context: .
-      dockerfile: ./airflow/Dockerfile
+    <<: *airflow-common
     container_name: dataops_airflow_scheduler
+    command: ["airflow", "scheduler"]
     depends_on:
-      dataops_postgres:
-        condition: service_healthy
-      dataops_volume_init:
-        condition: service_completed_successfully
+      <<: *airflow-common-depends-on
     environment:
-      AIRFLOW__CORE__EXECUTOR: "SequentialExecutor"
-      AIRFLOW__CORE__LOAD_EXAMPLES: "False"
-      AIRFLOW__DATABASE__SQL_ALCHEMY_CONN: ${DB_URL}
-      AIRFLOW__CORE__DAGS_FOLDER: /opt/airflow/src/pipeline/dags
-      AIRFLOW__WEBSERVER__SECRET_KEY: ${WEBSERVER_SECRET_KEY}
-      PYTHONPATH: /opt/airflow/src
+      <<: *airflow-common-env
       DB_HOST: ${DB_HOST}
       DB_PORT: ${DB_PORT}
       DB_USER: ${DB_USER}
       DB_PW: ${DB_PW}
       DB_NAME: ${DB_NAME}
-    volumes:
-      - ./src:/opt/airflow/src
-      - dbt_project:/dbt
-      - datasets:/datasets
-      - /var/run/docker.sock:/var/run/docker.sock
-    command: scheduler
+#      AIRFLOW__LOGGING__LOGGING_LEVEL: DEBUG
 
 volumes:
   dataops_data:

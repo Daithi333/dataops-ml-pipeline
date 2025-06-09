@@ -16,3 +16,5 @@ class Config:
     DATASETS = {
         "nyc_taxi": ("datasets/nyc_taxi/raw", "parquet", "yellow_taxi_data"),
     }
+
+    DOCKER_URL = os.getenv("DOCKER_URL", "unix://var/run/docker.sock")
